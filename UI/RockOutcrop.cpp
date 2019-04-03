@@ -35,6 +35,18 @@ RockOutcrop::RockOutcrop(QWidget *parent) :
     ui(new Ui::RockOutcrop)
 {
 
+    if(!QDir(analysisDir).exists())
+    {
+        QDir newDir(analysisDir);
+        newDir.mkpath(".");
+    }
+
+
+    QDir resDir(QDir(rootDir).filePath("resources"));
+    resDir.removeRecursively();
+
+    copyDir(QDir(qApp->applicationDirPath()).filePath("resources"),QDir(rootDir).filePath("resources"),true);
+
     // create analysis dir
     if(!QDir(analysisDir).exists())
         QDir().mkdir(analysisDir);
@@ -78,6 +90,9 @@ RockOutcrop::RockOutcrop(QWidget *parent) :
     ui->gotoPageBox->setFixedWidth(60);
     ui->gotoPageBox->hide();
     ui->curPageLabel->hide();
+
+    ui->heightLabel->setToolTip("meter");
+    ui->gwtLabel->setToolTip("meter");
 
 
     // set the global stylesheet
@@ -284,7 +299,7 @@ RockOutcrop::RockOutcrop(QWidget *parent) :
 
 
             QList<QVariant> valueList;
-            valueList << "Layer 1" << DefaultThickness << DefaultDensity << DefaultVs << DefaultEType << DefaultESize;
+            valueList << "Layer 1" << DefaultThickness << DefaultDensity << DefaultVs << DefaultEType << DefaultESize << "#64B5F6";
             ui->tableView->insertAt(valueList,0);
             ui->totalLayerLineEdit->setText("2");
         }
@@ -1047,7 +1062,15 @@ void RockOutcrop::on_runBtn_clicked()
 
     }
     else{
-        QString openseespath =  theTabManager->openseespath();
+        QString openseespath = theTabManager->openseespath();;//"OpenSees";//theTabManager->openseespath();
+        //QProcess* openseesTesterProcess = new QProcess(this);
+        //bool osrun = openseesProcess->startDetached(openseespath);
+        //osrun = true;
+        //int osrun = openseesProcess->execute("bash", QStringList() << "-c" <<  openseespath);
+
+
+
+
         QString rockmotionpath =  theTabManager->rockmotionpath();
         bool openseesEmpty = openseespath=="" || openseespath=="Input the full path of OpenSees excutable.";
         bool rockEmpty = rockmotionpath=="" || rockmotionpath=="Input the path of a ground motion file.";
@@ -1087,6 +1110,7 @@ void RockOutcrop::on_runBtn_clicked()
                                                      analysisDir.toStdString(),outputDir.toStdString(), m_callbackptr );
                 srt->buildTcl();
                 QMessageBox::information(this,tr("Path error"), "Please specify OpenSees's path in the configure tab.", tr("OK."));
+                //QMessageBox::information(this,tr("Path error"), "OpenSees is not found in your environment. Analysis didn't run", tr("OK."));
                 ui->progressBar->hide();
                 theTabManager->getTab()->setCurrentIndex(0);
 
@@ -1267,6 +1291,39 @@ void RockOutcrop::refresh()
     //ui->tableView->setVisible(true);
 
 
+}
+
+bool RockOutcrop::copyDir(const QDir& from, const QDir& to, bool cover=true)
+{
+
+    if (!to.exists())
+        {
+        if (!to.mkdir(to.absolutePath()))
+            return false;
+    } else {
+
+    }
+
+    QFileInfoList fileInfoList = from.entryInfoList();
+    foreach(QFileInfo fileInfo, fileInfoList)
+    {
+        if (fileInfo.fileName() == "." || fileInfo.fileName() == "..")
+            continue;
+
+        if (fileInfo.isDir()){
+            if (!copyDir(fileInfo.filePath(), to.filePath(fileInfo.fileName())))
+                return false;
+        }
+        else{
+            if (cover && to.exists(fileInfo.fileName())){
+                //to.remove(fileInfo.fileName());
+            }
+            if (!QFile::copy(fileInfo.filePath(), to.filePath(fileInfo.fileName()))){
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 

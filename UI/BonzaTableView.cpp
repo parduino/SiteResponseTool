@@ -146,10 +146,7 @@ void BonzaTableView::onCellSingleClicked(const QModelIndex &index)
     else
     {
         if (cellDoubleClicked)
-        {
-            QKeyEvent keyPress(QEvent::KeyPress, Qt::Key_Return, Qt::NoModifier, QString());
-            QCoreApplication::sendEvent(this, &keyPress);
-        }
+            this->edit(m_sqlModel->index(ir, ic));
     }
 
 
@@ -271,7 +268,8 @@ void BonzaTableView::insertAt(const QList<QVariant> &valueList, int insertPositi
                 QString data = valueList.at(i).toString();
                 m_sqlModel->setData(m_sqlModel->index(m_nTotal, col), data);
             }
-            m_sqlModel->setData(m_sqlModel->index(m_nTotal, COLOR), QColor::fromRgb(QRandomGenerator::global()->generate()).name());
+            if (valueList.count()!=7)
+                m_sqlModel->setData(m_sqlModel->index(m_nTotal, COLOR), QColor::fromRgb(QRandomGenerator::global()->generate()).name());
         }else{//Rock
             //QList<QVariant> valueListRock;
             //valueListRock << "Rock" << "-" << DefaultDensity << DefaultVs << DefaultEType << "-";
@@ -925,10 +923,10 @@ int BonzaTableView::lastPageSize()
 void BonzaTableView::contextMenuEvent(QContextMenuEvent *event)
 {
     QMenu* popMenu = new QMenu(this);
-    QAction *insertAction = popMenu->addAction( tr("&Insert  ⤴") );
+    QAction *insertAction = popMenu->addAction( tr("&Insert  ") + QChar(0x2934) );
     connect( insertAction, SIGNAL(triggered()), this, SIGNAL(insertAct()) );
 
-    QAction *removeAction = popMenu->addAction( tr("&Delete ×") );
+    QAction *removeAction = popMenu->addAction( tr("&Delete ") + QChar(0x2717) );
     removeAction->setEnabled(false);
 
     QModelIndex idx = this->indexAt( mapFromGlobal( QPoint( event->globalPos().x(), \
@@ -944,7 +942,7 @@ void BonzaTableView::contextMenuEvent(QContextMenuEvent *event)
         this->selectionModel()->clearSelection();
     }
 
-    QAction *insertBelowAction = popMenu->addAction( tr("&Insert  ⤵") );
+    QAction *insertBelowAction = popMenu->addAction( tr("&Insert  ") + QChar(0x2935) );
     insertBelowAction->setEnabled(false);
 
     QModelIndex idx2 = this->indexAt( mapFromGlobal( QPoint( event->globalPos().x(), \

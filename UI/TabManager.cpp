@@ -53,7 +53,7 @@ void TabManager::onElementDataChanged(QModelIndex,QModelIndex)
 
 void TabManager::init(QTabWidget* theTab){
     this->tab = theTab;
-    tab->setTabsClosable(true);
+    //tab->setTabsClosable(true);
 
 
     QUiLoader uiLoader;
@@ -173,7 +173,7 @@ void TabManager::init(QTabWidget* theTab){
 
     // adding tooltips
     QLabel *ELabel= ElasticIsotropicWidget->findChild<QLabel*>("ELabel");
-    ELabel->setToolTip("Pa");
+    ELabel->setToolTip("kPa");
     QLabel *vLabel= ElasticIsotropicWidget->findChild<QLabel*>("vLabel");
     vLabel->setToolTip("Poisson's ratio");
     QLabel *hPermLabel= ElasticIsotropicWidget->findChild<QLabel*>("hPermLabel");
@@ -202,12 +202,17 @@ void TabManager::setPM4SandToolTps()
 {
 
     // adding tooltips
-    /*
-    QLabel *ELabel= PM4SandWidget->findChild<QLabel*>("ELabel");
-    ELabel->setToolTip("Pa");
-    QLabel *vLabel= PM4SandWidget->findChild<QLabel*>("vLabel");
-    vLabel->setToolTip("Poisson's ratio");
-    */
+
+    QLabel *G0Label= PM4SandWidget->findChild<QLabel*>("G0_2");
+    G0Label->setToolTip("kPa");
+    QLabel *DenLabel= PM4SandWidget->findChild<QLabel*>("Den_2");
+    DenLabel->setToolTip("Mg/m^3");
+
+    QLabel *patmLabel= PM4SandWidget->findChild<QLabel*>("P_atm_2");
+    patmLabel->setToolTip("kPa");
+    QLabel *phicLabel= PM4SandWidget->findChild<QLabel*>("phic_2");
+    phicLabel->setToolTip("deg");
+
     QLabel *hPermLabel= PM4SandWidget->findChild<QLabel*>("hPerm_2");
     hPermLabel->setToolTip("");
     QLabel *vPermLabel= PM4SandWidget->findChild<QLabel*>("vPerm_2");
@@ -393,6 +398,24 @@ void TabManager::writeGM()
         QJsonArray timeseries = events[0].toObject()["timeSeries"].toArray();
         QString type = patterns[0].toObject()["type"].toString();
         QString tsname = patterns[0].toObject()["timeSeries"].toString();
+
+        QJsonObject units = events[0].toObject()["units"].toObject();
+        double g = 9.81;
+        double lengthUnit = 1.;
+        double timeUnit = 1.; // I guess everybody use sec for time.
+        if(!units.isEmpty())
+        {
+            QString lengthType = units["length"].toString();
+            if (lengthType=="in")
+                lengthUnit = 0.0254;
+            else if (lengthType=="m")
+                lengthUnit = 1.0;
+            else
+                qDebug() << "length unit not recognized.";// TODO: more handling in future
+            g = lengthUnit / timeUnit / timeUnit;
+        }
+
+
         if(type=="Time-Velocity")
         {
             for(int i=0;i<timeseries.size();i++)
@@ -471,6 +494,68 @@ void TabManager::writeGM()
                     for(int j=0;j<data.size();j++)
                         stream << QString::number(data[j].toDouble())+"\n";
 
+                    outFile.close();
+                    outFileTime.close();
+
+                    break;
+                }
+            }
+        } else if(type=="UniformVelocity")
+        {
+            for(int i=0;i<timeseries.size();i++)
+            {
+                QJsonObject tstmp = timeseries[i].toObject();
+                if(tstmp["name"]==tsname)
+                {
+                    QFile outFile(analysisDir+"/Rock.vel");
+                    outFile.open(QIODevice::WriteOnly | QIODevice::Text);
+                    QTextStream stream(&outFile);
+
+                    QFile outFileTime(analysisDir+"/Rock.time");
+                    outFileTime.open(QIODevice::WriteOnly | QIODevice::Text);
+                    QTextStream streamTime(&outFileTime);
+
+                    double dTtmp = tstmp["dT"].toDouble();
+                    QJsonArray data = tstmp["data"].toArray();
+                    for(int j=0;j<data.size();j++)
+                        streamTime << QString::number(dTtmp*j)+"\n";
+                    for(int j=0;j<data.size();j++)
+                        stream << QString::number(data[j].toDouble(),'g',16)+"\n";
+
+                    outFile.close();
+                    outFileTime.close();
+
+                    break;
+                }
+            }
+        } else if(type=="UniformAcceleration")
+        {
+
+            for(int i=0;i<timeseries.size();i++)
+            {
+                QJsonObject tstmp = timeseries[i].toObject();
+                if(tstmp["name"]==tsname)
+                {
+
+                    QFile outFile(analysisDir+"/Rock.vel");
+                    outFile.open(QIODevice::WriteOnly | QIODevice::Text);
+                    QTextStream stream(&outFile);
+
+                    QFile outFileTime(analysisDir+"/Rock.time");
+                    outFileTime.open(QIODevice::WriteOnly | QIODevice::Text);
+                    QTextStream streamTime(&outFileTime);
+
+                    double dTtmp = tstmp["dT"].toDouble();
+                    QJsonArray data = tstmp["data"].toArray();
+                    for(int j=0;j<data.size();j++)
+                        streamTime << QString::number(dTtmp*j)+"\n";
+                    double vprevious = 0.0;
+                    for(int j=0;j<data.size();j++)
+                    {
+                        double vnow = vprevious + data[j].toDouble()*g*dTtmp;
+                        vprevious = vnow;
+                        stream << QString::number(vnow,'g',16)+"\n";
+                    }
                     outFile.close();
                     outFileTime.close();
 
@@ -1708,21 +1793,25 @@ bool TabManager::writeSurfaceMotion()
     timeSerix["type"]= "Value";
     timeSerix["dT"]= dT;
     timeSerix["data"]= tx;
+    timeSeries.append(timeSerix);
+    /*
     timeSeriy["name"]= "accel_Y";
     timeSeriy["type"]= "Value";
     timeSeriy["dT"]= dT;
     timeSeriy["data"]= ty;
-    timeSeries.append(timeSerix);
     timeSeries.append(timeSeriy);
+    */
 
     patternx["type"] = "UniformAcceleration";
     patternx["timeSeries"] = "accel_X";
     patternx["dof"] = 1;
+    patterns.append(patternx);
+    /*
     patterny["type"] = "UniformAcceleration";
     patterny["timeSeries"] = "accel_Y";
-    patterny["dof"] = 1;
-    patterns.append(patternx);
+    patterny["dof"] = 2;
     patterns.append(patterny);
+    */
 
 
     evt["name"] = "SiteResponseTool";
