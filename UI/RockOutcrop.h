@@ -14,6 +14,9 @@
 #include "SiteResponse.h"
 #include "SSSharkThread.h"
 #include <QStandardPaths>
+#include <QCheckBox>
+#include <QDesktopServices>
+#include "GoogleAnalytics.h"
 
 using namespace std::placeholders;
 
@@ -38,18 +41,21 @@ public:
     // SimCenterWidget interface
     bool outputToJSON(QJsonObject &rvObject);
     bool inputFromJSON(QJsonObject &rvObject);
+    bool inputFromJSON_old(QJsonObject &rvObject);
     bool outputAppDataToJSON(QJsonObject &rvObject);
     bool inputAppDataFromJSON(QJsonObject &rvObject);
     bool copyFiles(QString &destDir);
 
     // callback setups
-    void refreshRun(double step);
-    std::function<void(double)> m_callbackptr = std::bind(&RockOutcrop::refreshRun,this, _1);
+    bool refreshRun(double step);
+    std::function<bool(double)> m_callbackptr = std::bind(&RockOutcrop::refreshRun,this, std::placeholders::_1);
 
     bool copyDir(const QDir& from, const QDir& to, bool cover) ;
     void cleanTable();
 
     void updateMesh(json &j);
+
+    int checkDimension();
 
 public slots:
 
@@ -84,6 +90,8 @@ private slots:
     void on_rowRemoved(int row);
 
     void on_reBtn_clicked();
+
+    void on_killBtn_clicked();
 
     void on_runBtn_clicked();
 
@@ -137,6 +145,12 @@ private:// some of them were public
 
     QThread *workerThread;
 
+    QString dimMsg = "";
+
+    bool loadPreviousResults = true;
+
+    SSSharkThread *shark;
+
  public:
     QString rootDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation); // qApp->applicationDirPath();//
     QString analysisDir = QDir(rootDir).filePath("analysis");
@@ -144,6 +158,7 @@ private:// some of them were public
     QString outputDir = QDir(analysisDir).filePath("out_tcl");
     QString srtFileName = QDir(analysisDir).filePath("SRT.json");
     QString evtjFileName =  QDir(analysisDir).filePath("EVENT-SRT.json");
+    QString femLog = QDir(analysisDir).filePath("fem.log");
 
 
 

@@ -34,7 +34,10 @@ void TabManager::onTabBarClicked(int tabinx)
     {
         GMView->reload();
         GMViewLoaded = true;
+        tab->setCurrentIndex(tabinx);
     }
+
+
     //emit onTabBarClickedFinished();
     //elementModel->reSetActive();
     //emit GMView->loadFinished(true);
@@ -56,6 +59,9 @@ void TabManager::init(QTabWidget* theTab){
     //tab->setTabsClosable(true);
 
 
+
+
+
     QUiLoader uiLoader;
 
 
@@ -73,6 +79,12 @@ void TabManager::init(QTabWidget* theTab){
     connect(FEMWidget->findChild<QLineEdit*>("GMPath"), SIGNAL(textChanged(const QString&)), this, SLOT(onGMTextChanged(const QString&)));
     connect(FEMWidget->findChild<QLineEdit*>("openseesPath"), SIGNAL(editingFinished()), this, SLOT(onConfigTabEdtFinished()));
     connect(FEMWidget->findChild<QLineEdit*>("GMPath"), SIGNAL(editingFinished()), this, SLOT(onConfigTabEdtFinished()));
+
+    dimCheckBox= FEMWidget->findChild<QCheckBox*>("shakeDimCheck");
+    dimCheckBox->setDisabled(true);
+    dimCheckBox->setToolTip("If your rock motion file contains bi-directional shaking data, this will be checked.");
+    connect(dimCheckBox, SIGNAL(toggled(bool)), this, SLOT(onShakeDimCheckToggled(bool)));
+
 
 
 
@@ -98,6 +110,11 @@ void TabManager::init(QTabWidget* theTab){
     //GMView->reload();
 
     tab->addTab(GMView,"Response");
+
+
+
+
+
 
 
     /*
@@ -128,6 +145,12 @@ void TabManager::init(QTabWidget* theTab){
     secondaryBtn->hide();
     connect(secondaryBtn, SIGNAL(clicked(bool)), this, SLOT(onSecondaryBtnClicked(bool)));
 
+    PM4SandWidget->findChild<QLineEdit*>("Den")->setReadOnly(true);
+    QPalette *palette = new QPalette();
+    palette->setColor(QPalette::Base,Qt::lightGray);
+    palette->setColor(QPalette::Text,Qt::white);
+    PM4SandWidget->findChild<QLineEdit*>("Den")->setPalette(*palette);
+
 
 
 
@@ -156,6 +179,8 @@ void TabManager::init(QTabWidget* theTab){
     secondaryBtn->hide();
     connect(secondaryBtn, SIGNAL(clicked(bool)), this, SLOT(onSecondaryBtnClicked(bool)));
     */
+    PM4SiltWidget->findChild<QLineEdit*>("Den")->setReadOnly(true);
+    PM4SiltWidget->findChild<QLineEdit*>("Den")->setPalette(*palette);
 
     QFile uiFilePIMY(":/UI/PIMY.ui");
     uiFilePIMY.open(QIODevice::ReadOnly);
@@ -180,6 +205,8 @@ void TabManager::init(QTabWidget* theTab){
     noYieldSurfEdtTmpPIMY->hide();
     QLabel *noYieldSurfLabelTmpPIMY= PIMYWidget->findChild<QLabel*>("noYieldSurf_2");
     noYieldSurfLabelTmpPIMY->hide();
+    PIMYWidget->findChild<QLineEdit*>("rho")->setReadOnly(true);
+    PIMYWidget->findChild<QLineEdit*>("rho")->setPalette(*palette);
 
     QFile uiFilePDMY(":/UI/PDMY.ui");
     uiFilePDMY.open(QIODevice::ReadOnly);
@@ -204,6 +231,8 @@ void TabManager::init(QTabWidget* theTab){
     noYieldSurfEdtTmpPDMY->hide();
     QLabel *noYieldSurfLabelTmpPDMY= PDMYWidget->findChild<QLabel*>("noYieldSurf_2");
     noYieldSurfLabelTmpPDMY->hide();
+    PDMYWidget->findChild<QLineEdit*>("rho")->setReadOnly(true);
+    PDMYWidget->findChild<QLineEdit*>("rho")->setPalette(*palette);
 
 
     QFile uiFilePDMY02(":/UI/PDMY02.ui");
@@ -229,6 +258,8 @@ void TabManager::init(QTabWidget* theTab){
     noYieldSurfEdtTmpPDMY02->hide();
     QLabel *noYieldSurfLabelTmpPDMY02= PDMY02Widget->findChild<QLabel*>("noYieldSurf_2");
     noYieldSurfLabelTmpPDMY02->hide();
+    PDMY02Widget->findChild<QLineEdit*>("rho")->setReadOnly(true);
+    PDMY02Widget->findChild<QLineEdit*>("rho")->setPalette(*palette);
 
 
     QFile uiFileManzariDafalias(":/UI/ManzariDafalias.ui");
@@ -250,6 +281,31 @@ void TabManager::init(QTabWidget* theTab){
     DrEdtTmpManzariDafalias->hide();
     QLabel *DrLabelTmpManzariDafalias= ManzariDafaliasWidget->findChild<QLabel*>("Dr_2");
     DrLabelTmpManzariDafalias->hide();
+    ManzariDafaliasWidget->findChild<QLineEdit*>("Den")->setReadOnly(true);
+    ManzariDafaliasWidget->findChild<QLineEdit*>("Den")->setPalette(*palette);
+
+
+    QFile uiFileJ2Bounding(":/UI/J2Bounding.ui");
+    uiFileJ2Bounding.open(QIODevice::ReadOnly);
+    J2BoundingWidget = uiLoader.load(&uiFileJ2Bounding,this);
+    for (int i = 0; i < listJ2BoundingFEM.size(); ++i) {
+        QString edtName = listJ2BoundingFEM[i] ;
+        edtsJ2BoundingFEM.push_back(J2BoundingWidget->findChild<QLineEdit*>(edtName));
+    }
+    // connect edit signal with onDataEdited
+    for (int i = 0; i < edtsJ2BoundingFEM.size(); ++i) {
+        connect(edtsJ2BoundingFEM[i], SIGNAL(editingFinished()), this, SLOT(onDataEdited()));
+    }
+    eSizeEdtTmp= J2BoundingWidget->findChild<QLineEdit*>("eSize");
+    eSizeEdtTmp->hide();
+    eSizeLabelTmp= J2BoundingWidget->findChild<QLabel*>("eSizeLabel");
+    eSizeLabelTmp->hide();
+    QLineEdit *DrEdtTmpJ2Bounding= J2BoundingWidget->findChild<QLineEdit*>("Dr");
+    DrEdtTmpJ2Bounding->hide();
+    QLabel *DrLabelTmpJ2Bounding= J2BoundingWidget->findChild<QLabel*>("Dr_2");
+    DrLabelTmpJ2Bounding->hide();
+    J2BoundingWidget->findChild<QLineEdit*>("rho")->setReadOnly(true);
+    J2BoundingWidget->findChild<QLineEdit*>("rho")->setPalette(*palette);
 
 
 
@@ -274,10 +330,12 @@ void TabManager::init(QTabWidget* theTab){
     QLabel *rhoLabelTmp= ElasticIsotropicWidget->findChild<QLabel*>("rhoLabel");
     rhoLabelTmp->hide();
 
+    /*
     QLineEdit *voidEdtTmp= ElasticIsotropicWidget->findChild<QLineEdit*>("voidEdt");
     voidEdtTmp->hide();
     QLabel *voidLabelTmp= ElasticIsotropicWidget->findChild<QLabel*>("voidLabel");
     voidLabelTmp->hide();
+    */
 
     QLineEdit *DrEdtTmp= ElasticIsotropicWidget->findChild<QLineEdit*>("DrEdt");
     DrEdtTmp->hide();
@@ -317,6 +375,28 @@ void TabManager::init(QTabWidget* theTab){
     connect(GMView,SIGNAL(loadFinished(bool)), this, SLOT(onGMLoadFinished(bool)));
 
     setPM4SandToolTps();
+
+    writeGM();
+
+
+
+    // load chat view from html
+    /*
+    quickstart = new QWebEngineView(this);
+    quickstart->load(QUrl("https://gitter.im/s3hark/community"));
+    /-*
+    QString qsHtmlName_true = QDir(rootDir).filePath(qsHtmlName);
+    QWebChannel *qsWebChannel   = new QWebChannel(quickstart->page());
+    quickstart->page()->setWebChannel(qsWebChannel);
+    quickstart->page()->load(QUrl::fromLocalFile(QFileInfo(qsHtmlName_true).absoluteFilePath()));
+    *-/
+    quickstart->show();
+    //quickstart->reload();
+    tab->addTab(quickstart,"Chat");
+    */
+
+
+
 
 
 }
@@ -538,118 +618,138 @@ void TabManager::writeGM()
             g = lengthUnit / timeUnit / timeUnit;
         }
 
+        if (timeseries.size() < 2)
+        {
+            dimCheckBox->setChecked(false);
+            slopex2->hide();
+            slopex2label->hide();
+            slopex2degreelabel->hide();
+        }
+        else
+        {
+            dimCheckBox->setChecked(true);
+            slopex2->setHidden(false);
+            slopex2label->setHidden(false);
+            slopex2degreelabel->setHidden(false);
+        }
+
 
         if(type=="Time-Velocity")
         {
             for(int i=0;i<timeseries.size();i++)
             {
                 QJsonObject tstmp = timeseries[i].toObject();
-                if(tstmp["name"]==tsname)
-                {
-                    QFile outFile(analysisDir+"/Rock.vel");
-                    outFile.open(QIODevice::WriteOnly | QIODevice::Text);
-                    QTextStream stream(&outFile);
+                //if(tstmp["name"]==tsname)
+                //{
+                QString thisTsName = tstmp["name"].toString();
+                QFile outFile(analysisDir+"/Rock-"+thisTsName+".vel");
+                outFile.open(QIODevice::WriteOnly | QIODevice::Text);
+                QTextStream stream(&outFile);
 
-                    QFile outFileTime(analysisDir+"/Rock.time");
-                    outFileTime.open(QIODevice::WriteOnly | QIODevice::Text);
-                    QTextStream streamTime(&outFileTime);
+                QFile outFileTime(analysisDir+"/Rock-"+thisTsName+".time");
+                outFileTime.open(QIODevice::WriteOnly | QIODevice::Text);
+                QTextStream streamTime(&outFileTime);
 
-                    QJsonArray tV = tstmp["time"].toArray();
-                    QJsonArray data = tstmp["data"].toArray();
-                    for(int j=0;j<tV.size();j++)
-                        streamTime << QString::number(tV[j].toDouble())+"\n";
-                    for(int j=0;j<data.size();j++)
-                        stream << QString::number(data[j].toDouble(),'g',16)+"\n";
+                QJsonArray tV = tstmp["time"].toArray();
+                QJsonArray data = tstmp["data"].toArray();
+                for(int j=0;j<tV.size();j++)
+                    streamTime << QString::number(tV[j].toDouble())+"\n";
+                for(int j=0;j<data.size();j++)
+                    stream << data[j].toString()+"\n";
+                    //stream << QString::number(data[j].toDouble(),'g',16)+"\n";
 
-                    outFile.close();
-                    outFileTime.close();
+                outFile.close();
+                outFileTime.close();
 
-                    break;
-                }
+                //break;
+                //}
             }
         }else if(type=="Time-Acceleration") // unit in g
         {
             for(int i=0;i<timeseries.size();i++)
             {
                 QJsonObject tstmp = timeseries[i].toObject();
-                if(tstmp["name"]==tsname)
-                {
-                    QFile outFile(analysisDir+"/Rock.acc");
-                    outFile.open(QIODevice::WriteOnly | QIODevice::Text);
-                    QTextStream stream(&outFile);
+                //if(tstmp["name"]==tsname)
+                //{
+                QString thisTsName = tstmp["name"].toString();
+                QFile outFile(analysisDir+"/Rock-"+thisTsName+".acc");
+                outFile.open(QIODevice::WriteOnly | QIODevice::Text);
+                QTextStream stream(&outFile);
 
-                    QFile outFileTime(analysisDir+"/Rock.time");
-                    outFileTime.open(QIODevice::WriteOnly | QIODevice::Text);
-                    QTextStream streamTime(&outFileTime);
+                QFile outFileTime(analysisDir+"/Rock-"+thisTsName+".time");
+                outFileTime.open(QIODevice::WriteOnly | QIODevice::Text);
+                QTextStream streamTime(&outFileTime);
 
-                    QJsonArray tV = tstmp["time"].toArray();
-                    QJsonArray data = tstmp["data"].toArray();
-                    for(int j=0;j<tV.size();j++)
-                        streamTime << QString::number(tV[j].toDouble())+"\n";
-                    for(int j=0;j<data.size();j++)
-                        stream << QString::number(data[j].toDouble())+"\n";
+                QJsonArray tV = tstmp["time"].toArray();
+                QJsonArray data = tstmp["data"].toArray();
+                for(int j=0;j<tV.size();j++)
+                    streamTime << QString::number(tV[j].toDouble())+"\n";
+                for(int j=0;j<data.size();j++)
+                    stream << QString::number(data[j].toDouble())+"\n";
 
-                    outFile.close();
-                    outFileTime.close();
+                outFile.close();
+                outFileTime.close();
 
-                    break;
-                }
+                //break;
+                //}
             }
         }else if(type=="Time-Displacement")
         {
             for(int i=0;i<timeseries.size();i++)
             {
                 QJsonObject tstmp = timeseries[i].toObject();
-                if(tstmp["name"]==tsname)
-                {
-                    QFile outFile(analysisDir+"/Rock.disp");
-                    outFile.open(QIODevice::WriteOnly | QIODevice::Text);
-                    QTextStream stream(&outFile);
+                //if(tstmp["name"]==tsname)
+                //{
+                QString thisTsName = tstmp["name"].toString();
+                QFile outFile(analysisDir+"/Rock-"+thisTsName+".disp");
+                outFile.open(QIODevice::WriteOnly | QIODevice::Text);
+                QTextStream stream(&outFile);
 
-                    QFile outFileTime(analysisDir+"/Rock.time");
-                    outFileTime.open(QIODevice::WriteOnly | QIODevice::Text);
-                    QTextStream streamTime(&outFileTime);
+                QFile outFileTime(analysisDir+"/Rock-"+thisTsName+".time");
+                outFileTime.open(QIODevice::WriteOnly | QIODevice::Text);
+                QTextStream streamTime(&outFileTime);
 
-                    QJsonArray tV = tstmp["time"].toArray();
-                    QJsonArray data = tstmp["data"].toArray();
-                    for(int j=0;j<tV.size();j++)
-                        streamTime << QString::number(tV[j].toDouble())+"\n";
-                    for(int j=0;j<data.size();j++)
-                        stream << QString::number(data[j].toDouble())+"\n";
+                QJsonArray tV = tstmp["time"].toArray();
+                QJsonArray data = tstmp["data"].toArray();
+                for(int j=0;j<tV.size();j++)
+                    streamTime << QString::number(tV[j].toDouble())+"\n";
+                for(int j=0;j<data.size();j++)
+                    stream << QString::number(data[j].toDouble())+"\n";
 
-                    outFile.close();
-                    outFileTime.close();
+                outFile.close();
+                outFileTime.close();
 
-                    break;
-                }
+                // break;
+                //}
             }
         } else if(type=="UniformVelocity")
         {
             for(int i=0;i<timeseries.size();i++)
             {
                 QJsonObject tstmp = timeseries[i].toObject();
-                if(tstmp["name"]==tsname)
-                {
-                    QFile outFile(analysisDir+"/Rock.vel");
-                    outFile.open(QIODevice::WriteOnly | QIODevice::Text);
-                    QTextStream stream(&outFile);
+                //if(tstmp["name"]==tsname)
+                //{
+                QString thisTsName = tstmp["name"].toString();
+                QFile outFile(analysisDir+"/Rock-"+thisTsName+".vel");
+                outFile.open(QIODevice::WriteOnly | QIODevice::Text);
+                QTextStream stream(&outFile);
 
-                    QFile outFileTime(analysisDir+"/Rock.time");
-                    outFileTime.open(QIODevice::WriteOnly | QIODevice::Text);
-                    QTextStream streamTime(&outFileTime);
+                QFile outFileTime(analysisDir+"/Rock-"+thisTsName+".time");
+                outFileTime.open(QIODevice::WriteOnly | QIODevice::Text);
+                QTextStream streamTime(&outFileTime);
 
-                    double dTtmp = tstmp["dT"].toDouble();
-                    QJsonArray data = tstmp["data"].toArray();
-                    for(int j=0;j<data.size();j++)
-                        streamTime << QString::number(dTtmp*j)+"\n";
-                    for(int j=0;j<data.size();j++)
-                        stream << QString::number(data[j].toDouble(),'g',16)+"\n";
+                double dTtmp = tstmp["dT"].toDouble();
+                QJsonArray data = tstmp["data"].toArray();
+                for(int j=0;j<data.size();j++)
+                    streamTime << QString::number(dTtmp*j)+"\n";
+                for(int j=0;j<data.size();j++)
+                    stream << QString::number(data[j].toDouble(),'g',16)+"\n";
 
-                    outFile.close();
-                    outFileTime.close();
+                outFile.close();
+                outFileTime.close();
 
-                    break;
-                }
+                //break;
+                //}
             }
         } else if(type=="UniformAcceleration")
         {
@@ -657,33 +757,34 @@ void TabManager::writeGM()
             for(int i=0;i<timeseries.size();i++)
             {
                 QJsonObject tstmp = timeseries[i].toObject();
-                if(tstmp["name"]==tsname)
+                //if(tstmp["name"]==tsname)
+                //{
+
+                QString thisTsName = tstmp["name"].toString();
+                QFile outFile(analysisDir+"/Rock-"+thisTsName+".vel");
+                outFile.open(QIODevice::WriteOnly | QIODevice::Text);
+                QTextStream stream(&outFile);
+
+                QFile outFileTime(analysisDir+"/Rock-"+thisTsName+".time");
+                outFileTime.open(QIODevice::WriteOnly | QIODevice::Text);
+                QTextStream streamTime(&outFileTime);
+
+                double dTtmp = tstmp["dT"].toDouble();
+                QJsonArray data = tstmp["data"].toArray();
+                for(int j=0;j<data.size();j++)
+                    streamTime << QString::number(dTtmp*j)+"\n";
+                double vprevious = 0.0;
+                for(int j=0;j<data.size();j++)
                 {
-
-                    QFile outFile(analysisDir+"/Rock.vel");
-                    outFile.open(QIODevice::WriteOnly | QIODevice::Text);
-                    QTextStream stream(&outFile);
-
-                    QFile outFileTime(analysisDir+"/Rock.time");
-                    outFileTime.open(QIODevice::WriteOnly | QIODevice::Text);
-                    QTextStream streamTime(&outFileTime);
-
-                    double dTtmp = tstmp["dT"].toDouble();
-                    QJsonArray data = tstmp["data"].toArray();
-                    for(int j=0;j<data.size();j++)
-                        streamTime << QString::number(dTtmp*j)+"\n";
-                    double vprevious = 0.0;
-                    for(int j=0;j<data.size();j++)
-                    {
-                        double vnow = vprevious + data[j].toDouble()*g*dTtmp;
-                        vprevious = vnow;
-                        stream << QString::number(vnow,'g',16)+"\n";
-                    }
-                    outFile.close();
-                    outFileTime.close();
-
-                    break;
+                    double vnow = vprevious + data[j].toDouble()*g*dTtmp;
+                    vprevious = vnow;
+                    stream << QString::number(vnow,'g',16)+"\n";
                 }
+                outFile.close();
+                outFileTime.close();
+
+                //break;
+                //}
             }
         }
 
@@ -798,6 +899,7 @@ void TabManager::initGMTab()
     QString rupwpHtmlNameTmp = QDir(rootDir).filePath("resources/ui/GroundMotion/rupwp-template.html");
     QString strainHtmlNameTmp = QDir(rootDir).filePath("resources/ui/GroundMotion/strain-template.html");
     QString stressHtmlNameTmp = QDir(rootDir).filePath("resources/ui/GroundMotion/stress-template.html");
+
     QFile file1(GMTabHtmlName);
     if(!file1.exists())
         QFile::copy(GMTabHtmlNameTmp, GMTabHtmlName);
@@ -819,14 +921,18 @@ void TabManager::initGMTab()
     QFile file7(stressHtmlName);
     if(!file7.exists())
         QFile::copy(stressHtmlNameTmp, stressHtmlName);
+
     GMView->reload();
 }
 
 void TabManager::updateVelHtml()
 {
     // get file paths
+    QString tmpPath;
+
     QFileInfo indexHtmlInfo(GMTabHtmlName);
-    QString tmpPath = QDir(rootDir).filePath("resources/ui/GroundMotion/index-template.html");
+    if (simulationD==3) tmpPath = QDir(rootDir).filePath("resources/ui/GroundMotion/index3D2D-template.html");
+    else tmpPath = QDir(rootDir).filePath("resources/ui/GroundMotion/index-template.html");
     QString newPath = QDir(rootDir).filePath("resources/ui/GroundMotion/index.html");
     QFile::remove(newPath);
     //QFile::copy(tmpPath, newPath);
@@ -860,7 +966,9 @@ void TabManager::updateAccHtml()
     // get file paths
     QFileInfo htmlInfo(accHtmlName);
     //QString dir = htmlInfo.path();
-    QString tmpPath = QDir(rootDir).filePath("resources/ui/GroundMotion/acc-template.html");
+    QString tmpPath;
+    if (simulationD==3) tmpPath = QDir(rootDir).filePath("resources/ui/GroundMotion/acc3D2D-template.html");
+    else tmpPath = QDir(rootDir).filePath("resources/ui/GroundMotion/acc-template.html");
     QString newPath = QDir(rootDir).filePath("resources/ui/GroundMotion/acc.html");
     QFile::remove(newPath);
 
@@ -894,7 +1002,9 @@ void TabManager::updateDispHtml()
     // get file paths
     QFileInfo htmlInfo(dispHtmlName);
     //QString dir = htmlInfo.path();
-    QString tmpPath = QDir(rootDir).filePath("resources/ui/GroundMotion/disp-template.html");
+    QString tmpPath;
+    if (simulationD==3) tmpPath = QDir(rootDir).filePath("resources/ui/GroundMotion/disp3D2D-template.html");
+    else tmpPath = QDir(rootDir).filePath("resources/ui/GroundMotion/disp-template.html");
     QString newPath = QDir(rootDir).filePath("resources/ui/GroundMotion/disp.html");
     QFile::remove(newPath);
 
@@ -927,7 +1037,9 @@ void TabManager::updateStrainHtml()
     // get file paths
     QFileInfo htmlInfo(strainHtmlName);
     //QString dir = htmlInfo.path();
-    QString tmpPath = QDir(rootDir).filePath("resources/ui/GroundMotion/strain-template.html");
+    QString tmpPath;
+    if (simulationD==3) tmpPath = QDir(rootDir).filePath("resources/ui/GroundMotion/strain3D2D-template.html");
+    else tmpPath = QDir(rootDir).filePath("resources/ui/GroundMotion/strain-template.html");
     QString newPath = QDir(rootDir).filePath("resources/ui/GroundMotion/strain.html");
     QFile::remove(newPath);
 
@@ -961,7 +1073,9 @@ void TabManager::updateStressHtml()
     // get file paths
     QFileInfo htmlInfo(strainHtmlName);
     //QString dir = htmlInfo.path();
-    QString tmpPath = QDir(rootDir).filePath("resources/ui/GroundMotion/stress-template.html");
+    QString tmpPath;
+    if (simulationD==3) tmpPath = QDir(rootDir).filePath("resources/ui/GroundMotion/stress3D2D-template.html");
+    else tmpPath = QDir(rootDir).filePath("resources/ui/GroundMotion/stress-template.html");
     QString newPath = QDir(rootDir).filePath("resources/ui/GroundMotion/stress.html");
     QFile::remove(newPath);
 
@@ -994,7 +1108,9 @@ void TabManager::updateStressStrainHtml()
     // get file paths
     QFileInfo htmlInfo(strainHtmlName);
     //QString dir = htmlInfo.path();
-    QString tmpPath = QDir(rootDir).filePath("resources/ui/GroundMotion/stressstrain-template.html");
+    QString tmpPath;
+    if (simulationD==3) tmpPath = QDir(rootDir).filePath("resources/ui/GroundMotion/stressstrain3D2D-template.html");
+    else tmpPath = QDir(rootDir).filePath("resources/ui/GroundMotion/stressstrain-template.html");
     QString newPath = QDir(rootDir).filePath("resources/ui/GroundMotion/stressstrain.html");
     QFile::remove(newPath);
 
@@ -1139,18 +1255,34 @@ QString TabManager::loadGMtoString()
 
     QStringList *xd = postProcessor->getxdBaseVel();
     QStringList *yd = postProcessor->getydBaseVel();
+    QStringList *ydx2 = postProcessor->getydBaseVelx2();
 
-    int overStep = int(floor(xd->size()/maxStepToShow));
+    overStep = int(floor(xd->size()/maxStepToShow));
+    if (overStep < 1)
+        overStep = 1;
 
     stream << "xnew = ['x'";
     for (int i=0; i<xd->size(); i+=overStep)
         stream << ", "<<xd->at(i);
     stream <<"];" <<endl;
 
-    stream << "ynew = ['Rock motion'";
-    for (int i=0; i<yd->size(); i+=overStep)
-        stream << ", "<<yd->at(i);
-    stream <<"];" <<endl;
+    if (simulationD==3)
+    {
+        stream << "ynewx1 = ['Rock motion-x1'";
+        for (int i=0; i<yd->size(); i+=overStep)
+            stream << ", "<<yd->at(i);
+        stream <<"];" <<endl;
+        stream << "ynewx2 = ['Rock motion-x2'";
+        for (int i=0; i<ydx2->size(); i+=overStep)
+            stream << ", "<<ydx2->at(i);
+        stream <<"];" <<endl;
+    }
+    else {
+        stream << "ynew = ['Rock motion'";
+        for (int i=0; i<yd->size(); i+=overStep)
+            stream << ", "<<yd->at(i);
+        stream <<"];" <<endl;
+    }
 
     /*
      * Get surface motion from file
@@ -1159,17 +1291,32 @@ QString TabManager::loadGMtoString()
 
     QStringList *xdSurfaceVel = postProcessor->getxdSurfaceVel();
     QStringList *ydSurfaceVel = postProcessor->getydSurfaceVel();
+    QStringList *ydSurfaceVelx2 = postProcessor->getydSurfaceVelx2();
 
-    overStep = int(floor(xdSurfaceVel->size()/maxStepToShow));
+    //overStep = int(floor(xdSurfaceVel->size()/maxStepToShow));
     stream << "xSurfaceVel = ['x'";
     for (int i=0; i<xdSurfaceVel->size(); i+=overStep)
         stream << ", "<<xdSurfaceVel->at(i);
     stream <<"];" <<endl;
 
-    stream << "ySurfaceVel = ['Surface motion'";
-    for (int i=0; i<ydSurfaceVel->size(); i+=overStep)
-        stream << ", "<<ydSurfaceVel->at(i).toDouble();
-    stream <<"];" <<endl;
+    if (simulationD==3)
+    {
+        stream << "ySurfaceVelx1 = ['Surface motion-x1'";
+        for (int i=0; i<ydSurfaceVel->size(); i+=overStep)
+            stream << ", "<<ydSurfaceVel->at(i).toDouble();
+        stream <<"];" <<endl;
+
+        stream << "ySurfaceVelx2 = ['Surface motion-x2'";
+        for (int i=0; i<ydSurfaceVelx2->size(); i+=overStep)
+            stream << ", "<<ydSurfaceVelx2->at(i).toDouble();
+        stream <<"];" <<endl;
+    }
+    else {
+        stream << "ySurfaceVel = ['Surface motion'";
+        for (int i=0; i<ydSurfaceVel->size(); i+=overStep)
+            stream << ", "<<ydSurfaceVel->at(i).toDouble();
+        stream <<"];" <<endl;
+    }
 
     QString nodeResponseStr = loadNodeResponse("vel");
     stream << nodeResponseStr;
@@ -1186,14 +1333,24 @@ QString TabManager::loadGMtoString()
     stream << "       chart.load({"<<endl;
     stream << "           columns: ["<<endl;
     stream << "           xnew,"<<endl;
-    stream <<"           ynew"<<endl;
+    if(simulationD==3)
+    {
+    stream <<"           ynewx1,"<<endl;
+    stream <<"           ynewx2"<<endl;
+    }
+    else stream <<"           ynew"<<endl;
     stream <<"           ]"<<endl;
     stream <<"       });"<<endl;
 
     stream << "       chart.load({"<<endl;
     stream << "           columns: ["<<endl;
     stream << "           xSurfaceVel,"<<endl;
-    stream <<"           ySurfaceVel"<<endl;
+    if(simulationD==3)
+    {
+    stream <<"           ySurfaceVelx1,"<<endl;
+    stream <<"           ySurfaceVelx2"<<endl;
+    }
+    else stream <<"           ySurfaceVel"<<endl;
     stream <<"           ]"<<endl;
     stream <<"       });"<<endl;
 
@@ -1308,7 +1465,12 @@ QString TabManager::loadGMtoStringVintage()
     stream << "       chart.load({"<<endl;
     stream << "           columns: ["<<endl;
     stream << "           xSurfaceVel,"<<endl;
-    stream <<"           ySurfaceVel"<<endl;
+    if(simulationD==3)
+    {
+    stream <<"           ySurfaceVelx1,"<<endl;
+    stream <<"           ySurfaceVelx2"<<endl;
+    }
+    else stream <<"           ySurfaceVel"<<endl;
     stream <<"           ]"<<endl;
     stream <<"       });"<<endl;
 
@@ -1333,41 +1495,62 @@ QString TabManager::loadMotions2String(QString motion)
     QStringList *xdBase;
     QStringList *xdSurface;
     QStringList *ydBase;
+    QStringList *ydBasex2;
     QStringList *ydSurface;
+    QStringList *ydSurfacex2;
 
     if (motion=="vel")
     {
         xdBase = postProcessor->getxdBaseVel();
         ydBase = postProcessor->getydBaseVel();
+        if(simulationD==3) ydBasex2 = postProcessor->getydBaseVelx2();
         xdSurface = postProcessor->getxdSurfaceVel();
         ydSurface = postProcessor->getydSurfaceVel();
+        if(simulationD==3) ydSurfacex2 = postProcessor->getydSurfaceVelx2();
     } else if (motion=="acc")
     {
         xdBase = postProcessor->getxdBaseAcc();
         ydBase = postProcessor->getydBaseAcc();
+        if(simulationD==3) ydBasex2 = postProcessor->getydBaseAccx2();
         xdSurface = postProcessor->getxdSurfaceAcc();
         ydSurface = postProcessor->getydSurfaceAcc();
+        if(simulationD==3) ydSurfacex2 = postProcessor->getydSurfaceAccx2();
     } else {
         xdBase = postProcessor->getxdBaseDisp();
         ydBase = postProcessor->getydBaseDisp();
+        if(simulationD==3) ydBasex2 = postProcessor->getydBaseDispx2();
         xdSurface = postProcessor->getxdSurfaceDisp();
         ydSurface = postProcessor->getydSurfaceDisp();
+        if(simulationD==3) ydSurfacex2 = postProcessor->getydSurfaceDispx2();
     }
 
 
-    int overStep;
+    //int overStep;
     if(xdBase && ydBase)
     {
-        overStep = int(floor(xdBase->size()/maxStepToShow));
+        //overStep = int(floor(xdBase->size()/maxStepToShow));
         stream << "xnew = ['x'";
         for (int i=0; i<xdBase->size(); i+=overStep)
             stream << ", "<<xdBase->at(i);
         stream <<"];" <<endl;
 
-        stream << "ynew = ['Rock motion'";
-        for (int i=0; i<ydBase->size(); i+=overStep)
-            stream << ", "<<ydBase->at(i);
-        stream <<"];" <<endl;
+        if(simulationD==3)
+        {
+            stream << "ynewx1 = ['Rock motion-x1'";
+            for (int i=0; i<ydBase->size(); i+=overStep)
+                stream << ", "<<ydBase->at(i);
+            stream <<"];" <<endl;
+            stream << "ynewx2 = ['Rock motion-x2'";
+            for (int i=0; i<ydBasex2->size(); i+=overStep)
+                stream << ", "<<ydBasex2->at(i);
+            stream <<"];" <<endl;
+        }else {
+            stream << "ynew = ['Rock motion'";
+            for (int i=0; i<ydBase->size(); i+=overStep)
+                stream << ", "<<ydBase->at(i);
+            stream <<"];" <<endl;
+
+        }
     }
 
 
@@ -1388,11 +1571,23 @@ QString TabManager::loadMotions2String(QString motion)
         for (int i=0; i<xdSurface->size(); i+=overStep)
             stream << ", "<<xdSurface->at(i);
         stream <<"];" <<endl;
+        if(simulationD==3)
+        {
+            stream << "ySurfaceVelx1 = ['Surface motion-x1'";
+            for (int i=0; i<ydSurface->size(); i+=overStep)
+                stream << ", "<<ydSurface->at(i).toDouble();
+            stream <<"];" <<endl;
+            stream << "ySurfaceVelx2 = ['Surface motion-x2'";
+            for (int i=0; i<ydSurfacex2->size(); i+=overStep)
+                stream << ", "<<ydSurfacex2->at(i).toDouble();
+            stream <<"];" <<endl;
+        }else {
+            stream << "ySurfaceVel = ['Surface motion'";
+            for (int i=0; i<ydSurface->size(); i+=overStep)
+                stream << ", "<<ydSurface->at(i).toDouble();
+            stream <<"];" <<endl;
 
-        stream << "ySurfaceVel = ['Surface motion'";
-        for (int i=0; i<ydSurface->size(); i+=overStep)
-            stream << ", "<<ydSurface->at(i).toDouble();
-        stream <<"];" <<endl;
+        }
     }
 
     writeSurfaceMotion();
@@ -1407,14 +1602,24 @@ QString TabManager::loadMotions2String(QString motion)
     stream << "       chart.load({"<<endl;
     stream << "           columns: ["<<endl;
     stream << "           xnew,"<<endl;
-    stream <<"           ynew"<<endl;
+    if(simulationD==3)
+    {stream <<"           ynewx1,"<<endl;
+        stream <<"           ynewx2"<<endl;
+    }else {
+        stream <<"           ynew"<<endl;
+    }
     stream <<"           ]"<<endl;
     stream <<"       });"<<endl;
 
     stream << "       chart.load({"<<endl;
     stream << "           columns: ["<<endl;
     stream << "           xSurfaceVel,"<<endl;
-    stream <<"           ySurfaceVel"<<endl;
+    if(simulationD==3)
+    {stream <<"           ySurfaceVelx1,"<<endl;
+        stream <<"           ySurfaceVelx2"<<endl;
+    }else {
+        stream <<"           ySurfaceVel"<<endl;
+    }
     stream <<"           ]"<<endl;
     stream <<"       });"<<endl;
 
@@ -1461,7 +1666,7 @@ QString TabManager::loadNodeResponse(QString motion)
 
     if(v->size()>0)
     {
-        int overStep = int(floor((*v)[0].size()/maxStepToShow));
+        //int overStep = int(floor((*v)[0].size()/maxStepToShow));
 
         stream << "time = ['x'";
         for (int i=0; i<(*v)[0].size(); i+=overStep)
@@ -1472,11 +1677,24 @@ QString TabManager::loadNodeResponse(QString motion)
         for (int j=7;j<v->size();j+=4)
         {
             eleID -= 1;
-            stream << "n"+QString::number(eleID)+" = ['Node "+QString::number(eleID)+"'";
-            for (int i=0; i<(*v)[j].size(); i+=overStep)
-                stream << ", "<<(*v)[j][i];
-            stream <<"];" <<endl;
+            if(simulationD==2)
+            {
+                stream << "n"+QString::number(eleID)+" = ['Node "+QString::number(eleID)+"'";
+                for (int i=0; i<(*v)[j].size(); i+=overStep)
+                    stream << ", "<<(*v)[j][i];
+                stream <<"];" <<endl;
+            }else {
+                stream << "n"+QString::number(eleID)+"x1 = ['Node "+QString::number(eleID)+"-x1'";
+                for (int i=0; i<(*v)[j].size(); i+=overStep)
+                    stream << ", "<<(*v)[j][i];
+                stream <<"];" <<endl;
+                stream << "n"+QString::number(eleID)+"x2 = ['Node "+QString::number(eleID)+"-x2'";
+                for (int i=0; i<(*v)[j+1].size(); i+=overStep)
+                    stream << ", "<<(*v)[j+1][i];
+                stream <<"];" <<endl;
+            }
         }
+
     }
 
 
@@ -1582,7 +1800,7 @@ QString TabManager::loadPWPResponse()
     if(v.size()>0)
     {
 
-        int overStep = int(floor(v[0].size()/maxStepToShow));
+        //int overStep = int(floor(v[0].size()/maxStepToShow));
         stream << "xnew = ['x'";
         for (int i=0; i<v[0].size(); i+=overStep)
             stream << ", "<<v[0][i];
@@ -1601,7 +1819,9 @@ QString TabManager::loadPWPResponse()
 
 
         int eleID = elementModel->getSize();
-        for (int j=4;j<v.size();j+=2)
+        int startind = simulationD==3 ? 8 : 4;
+        int thisstep = simulationD==3 ? 4 : 2;
+        for (int j=startind;j<v.size();j+=thisstep)
         {
             eleID -= 1;
             //stream << "n1 = ['Node 1'";
@@ -1665,7 +1885,7 @@ QString TabManager::loadruPWPResponse()
     if(v.size()>0)
     {
 
-        int overStep = int(floor(v[0].size()/maxStepToShow));
+        //int overStep = int(floor(v[0].size()/maxStepToShow));
         stream << "time = ['x'";
         for (int i=0; i<v[0].size(); i+=overStep)
             stream << ", "<<v[0][i];
@@ -1674,7 +1894,9 @@ QString TabManager::loadruPWPResponse()
 
         int eleID = elementModel->getSize();
         int eleInd = -1;
-        for (int j=4;j<v.size();j+=2)
+        int jinit = simulationD==3 ? 8 : 4;
+        int jstep = simulationD==3 ? 4 : 2;
+        for (int j=jinit;j<v.size();j+=jstep)
         {
             eleID -= 1;
             //stream << "n1 = ['Node 1'";
@@ -1790,7 +2012,7 @@ QString TabManager::loadEleResponse(QString motion)
 
     if(vStress.size()>0)
     {
-        int overStep = int(floor(vStress[0].size()/maxStepToShow));
+        //int overStep = int(floor(vStress[0].size()/maxStepToShow));
         stream << "time = ['x'";
         for (int i=0; i<vStress[0].size(); i+=overStep)
             stream << ", "<<vStress[0][i];
@@ -1810,39 +2032,108 @@ QString TabManager::loadEleResponse(QString motion)
         else if(motion=="stressstrain")
             outTitle="StressStrain";
 
+        int startind = simulationD==3 ? 4 : 3;
+        int thisstep = simulationD==3 ? 6 : 3;
         if(motion!="stressstrain")
         {
             int eleID = elementModel->getSize();
-            for (int j=3;j<v.size();j+=3)
+            for (int j=startind;j<v.size();j+=thisstep)
             {
                 eleID -= 1;
                 //stream << "n1 = ['Node 1'";
-                stream << outTitle+QString::number(eleID)+" = ['Element "+QString::number(eleID)+"'";
-                //stream << "pwp"+QString::number(eleID)+" = ['Node marked by <'";
-                for (int i=0; i<v[j].size(); i+=overStep)
-                    stream << ", "<<v[j][i];
-                stream <<"];" <<endl;
+                if(simulationD==2)
+                {
+                    stream << outTitle+QString::number(eleID)+" = ['Element "+QString::number(eleID)+"'";
+                    //stream << "pwp"+QString::number(eleID)+" = ['Node marked by <'";
+                    for (int i=0; i<v[j].size(); i+=overStep)
+                        stream << ", "<<v[j][i];
+                    stream <<"];" <<endl;
+                }
+                else
+                {
+                    stream << outTitle+"12"+QString::number(eleID)+" = ['Element "+QString::number(eleID)+" (12)'";
+                    //stream << "pwp"+QString::number(eleID)+" = ['Node marked by <'";
+                    for (int i=0; i<v[j].size(); i+=overStep)
+                        stream << ", "<<v[j][i];
+                    stream <<"];" <<endl;
+                    stream << outTitle+"23"+QString::number(eleID)+" = ['Element "+QString::number(eleID)+" (23)'";
+                    //stream << "pwp"+QString::number(eleID)+" = ['Node marked by <'";
+                    for (int i=0; i<v[j+1].size(); i+=overStep)
+                        stream << ", "<<v[j+1][i];
+                    stream <<"];" <<endl;
+                    stream << outTitle+"13"+QString::number(eleID)+" = ['Element "+QString::number(eleID)+" (13)'";
+                    //stream << "pwp"+QString::number(eleID)+" = ['Node marked by <'";
+                    for (int i=0; i<v[j+2].size(); i+=overStep)
+                        stream << ", "<<v[j+2][i];
+                    stream <<"];" <<endl;
+                }
             }
         }else{
 
             int eleID = elementModel->getSize();
-            for (int j=3;j<vStress.size();j+=3)
+            for (int j=startind;j<vStress.size();j+=thisstep)
             {
                 eleID -= 1;
-
-                stream << "Stress"+QString::number(eleID)+" = ['Element "+QString::number(eleID)+"'";
-                for (int i=0; i<vStress[j].size(); i+=overStep)
+                if(simulationD==2)
                 {
-                    stream << ", "<<vStress[j][i] ;
-                }
-                stream <<"];" <<endl;
+                    stream << "Stress"+QString::number(eleID)+" = ['Element "+QString::number(eleID)+"'";
+                    for (int i=0; i<vStress[j].size(); i+=overStep)
+                    {
+                        stream << ", "<<vStress[j][i] ;
+                    }
+                    stream <<"];" <<endl;
 
-                stream << "Strain"+QString::number(eleID)+" = ['x'";
-                for (int i=0; i<vStrain[j].size(); i+=overStep)
-                {
-                    stream << ", "<<vStrain[j][i] ;
+                    stream << "Strain"+QString::number(eleID)+" = ['x'";
+                    for (int i=0; i<vStrain[j].size(); i+=overStep)
+                    {
+                        stream << ", "<<vStrain[j][i] ;
+                    }
+                    stream <<"];" <<endl;
+                }else {
+                    stream << "Stress12"+QString::number(eleID)+" = ['Element "+QString::number(eleID)+" (12)'";
+                    for (int i=0; i<vStress[j].size(); i+=overStep)
+                    {
+                        stream << ", "<<vStress[j][i] ;
+                    }
+                    stream <<"];" <<endl;
+                    stream << "Stress23"+QString::number(eleID)+" = ['Element "+QString::number(eleID)+" (23)'";
+                    for (int i=0; i<vStress[j+1].size(); i+=overStep)
+                    {
+                        stream << ", "<<vStress[j+1][i] ;
+                    }
+                    stream <<"];" <<endl;
+                    stream << "Stress13"+QString::number(eleID)+" = ['Element "+QString::number(eleID)+" (13)'";
+                    for (int i=0; i<vStress[j+2].size(); i+=overStep)
+                    {
+                        stream << ", "<<vStress[j+2][i] ;
+                    }
+                    stream <<"];" <<endl;
+
+                   //stream << "Strain12"+QString::number(eleID)+" = ['Elementx "+QString::number(eleID)+" (12)'";
+                    stream << "Strain12"+QString::number(eleID)+" = ['x"+QString::number(eleID)+"12'";
+                    for (int i=0; i<vStrain[j].size(); i+=overStep)
+                    {
+                        stream << ", "<<vStrain[j][i] ;
+                    }
+                    stream <<"];" <<endl;
+
+                    //stream << "Strain12"+QString::number(eleID)+" = ['Elementx "+QString::number(eleID)+" (13)'";
+                    stream << "Strain23"+QString::number(eleID)+" = ['x"+QString::number(eleID)+"23'";
+                    for (int i=0; i<vStrain[j+1].size(); i+=overStep)
+                    {
+                        stream << ", "<<vStrain[j+1][i] ;
+                    }
+                    stream <<"];" <<endl;
+
+                    //stream << "Strain12"+QString::number(eleID)+" = ['Elementx "+QString::number(eleID)+" (23)'";
+                    stream << "Strain13"+QString::number(eleID)+" = ['x"+QString::number(eleID)+"13'";
+                    for (int i=0; i<vStrain[j+1].size(); i+=overStep)
+                    {
+                        stream << ", "<<vStrain[j+1][i] ;
+                    }
+                    stream <<"];" <<endl;
+
                 }
-                stream <<"];" <<endl;
             }
         }
     }
@@ -2000,6 +2291,17 @@ void TabManager::initFEMTab(){
         connect(edtsFEM[i], SIGNAL(editingFinished()), this, SLOT(onFEMTabEdited()));
     }
 
+
+    slopex1 = FEMWidget->findChild<QLineEdit*>("slopex1");
+    slopex2 = FEMWidget->findChild<QLineEdit*>("slopex2");
+    slopex1label = FEMWidget->findChild<QLabel*>("slopex1label");
+    slopex2label = FEMWidget->findChild<QLabel*>("slopex2label");
+    slopex1degreelabel = FEMWidget->findChild<QLabel*>("degreex1label");
+    slopex2degreelabel = FEMWidget->findChild<QLabel*>("degreex2label");
+
+    slopex1->setText("0");
+    slopex2->setText("0");
+
     fillFEMTab();
 
 
@@ -2098,17 +2400,26 @@ void TabManager::onTableViewClicked(const QModelIndex &index){
     {
         currentEdts = edtsManzariDafaliasFEM;
         currentWidget = ManzariDafaliasWidget;
+    }else if (thisMatType=="J2Bounding")
+    {
+        currentEdts = edtsJ2BoundingFEM;
+        currentWidget = J2BoundingWidget;
     }
     else
         currentWidget = defaultWidget;
 
 
-    for (int j=tab->count();j>0;j--)
+    for (int j=tab->count();j>1;j--)
         tab->removeTab(j-1);
-    tab->insertTab(0,FEMWidget,"Configure");
+    //tab->insertTab(0,FEMWidget,"Quickstart");
+    //tab->insertTab(1,FEMWidget,"Configure");
     tab->insertTab(1,currentWidget,"Layer properties");
     tab->insertTab(2,GMView,"Response");
+    //tab->insertTab(3,quickstart,"Chat");
     tab->setCurrentIndex(1);
+
+
+
 
     /*
     QList<QVariant> infos = tableView->getRowInfo(currentRow);
@@ -2133,6 +2444,8 @@ void TabManager::updateOpenSeesPath(QString path)
     edtsFEM[OpenSeesPathPos]->setText(path);
 }
 
+
+
 void TabManager::updateLayerTab(QJsonObject l,QJsonObject mat)
 {
     QString name = l["name"].toString();
@@ -2142,6 +2455,7 @@ void TabManager::updateLayerTab(QJsonObject l,QJsonObject mat)
     double hPermval = l["hPerm"].toDouble();
     double vPermval = l["vPerm"].toDouble();
     double uBulkval = l["uBulk"].toDouble();
+    double evoidval = l["void"].toDouble();
 
 
     // update element pars
@@ -2161,6 +2475,8 @@ void TabManager::updateLayerTab(QJsonObject l,QJsonObject mat)
         vPerm->setText(QString::number(vPermval,'g',16));
         QLineEdit *uBulk= ElasticIsotropicWidget->findChild<QLineEdit*>("uBulkEdt");
         uBulk->setText(QString::number(uBulkval,'g',16));
+        QLineEdit *evoid= ElasticIsotropicWidget->findChild<QLineEdit*>("voidEdt");
+        evoid->setText(QString::number(evoidval,'g',16));
 
     } else if(matType=="PM4Sand")
     {
@@ -2175,6 +2491,8 @@ void TabManager::updateLayerTab(QJsonObject l,QJsonObject mat)
         vPerm->setText(QString::number(vPermval,'g',16));
         QLineEdit *uBulk= PM4SandWidget->findChild<QLineEdit*>("uBulk");
         uBulk->setText(QString::number(uBulkval,'g',16));
+        QLineEdit *evoid= PM4SandWidget->findChild<QLineEdit*>("evoid");
+        evoid->setText(QString::number(evoidval,'g',16));
     } else if(matType=="PM4Silt")
     {
         for (int i = 0; i < listPM4SiltFEM.size(); ++i) {
@@ -2188,6 +2506,8 @@ void TabManager::updateLayerTab(QJsonObject l,QJsonObject mat)
         vPerm->setText(QString::number(vPermval,'g',16));
         QLineEdit *uBulk= PM4SiltWidget->findChild<QLineEdit*>("uBulk");
         uBulk->setText(QString::number(uBulkval,'g',16));
+        QLineEdit *evoid= PM4SiltWidget->findChild<QLineEdit*>("evoid");
+        evoid->setText(QString::number(evoidval,'g',16));
     } else if(matType=="PIMY")
     {
         for (int i = 0; i < listPIMYFEM.size(); ++i) {
@@ -2201,6 +2521,8 @@ void TabManager::updateLayerTab(QJsonObject l,QJsonObject mat)
         vPerm->setText(QString::number(vPermval,'g',16));
         QLineEdit *uBulk= PIMYWidget->findChild<QLineEdit*>("uBulk");
         uBulk->setText(QString::number(uBulkval,'g',16));
+        QLineEdit *evoid= PIMYWidget->findChild<QLineEdit*>("evoid");
+        evoid->setText(QString::number(evoidval,'g',16));
     } else if(matType=="PDMY")
     {
         for (int i = 0; i < listPDMYFEM.size(); ++i) {
@@ -2214,6 +2536,8 @@ void TabManager::updateLayerTab(QJsonObject l,QJsonObject mat)
         vPerm->setText(QString::number(vPermval,'g',16));
         QLineEdit *uBulk= PDMYWidget->findChild<QLineEdit*>("uBulk");
         uBulk->setText(QString::number(uBulkval,'g',16));
+        QLineEdit *evoid= PDMYWidget->findChild<QLineEdit*>("evoid");
+        evoid->setText(QString::number(evoidval,'g',16));
     } else if(matType=="PDMY02")
     {
         for (int i = 0; i < listPDMY02FEM.size(); ++i) {
@@ -2227,6 +2551,8 @@ void TabManager::updateLayerTab(QJsonObject l,QJsonObject mat)
         vPerm->setText(QString::number(vPermval,'g',16));
         QLineEdit *uBulk= PDMY02Widget->findChild<QLineEdit*>("uBulk");
         uBulk->setText(QString::number(uBulkval,'g',16));
+        QLineEdit *evoid= PDMY02Widget->findChild<QLineEdit*>("evoid");
+        evoid->setText(QString::number(evoidval,'g',16));
     } else if(matType=="ManzariDafalias")
     {
         for (int i = 0; i < listManzariDafaliasFEM.size(); ++i) {
@@ -2240,6 +2566,23 @@ void TabManager::updateLayerTab(QJsonObject l,QJsonObject mat)
         vPerm->setText(QString::number(vPermval,'g',16));
         QLineEdit *uBulk= ManzariDafaliasWidget->findChild<QLineEdit*>("uBulk");
         uBulk->setText(QString::number(uBulkval,'g',16));
+        QLineEdit *evoid= ManzariDafaliasWidget->findChild<QLineEdit*>("evoid");
+        evoid->setText(QString::number(evoidval,'g',16));
+    } else if(matType=="J2Bounding")
+    {
+        for (int i = 0; i < listJ2BoundingFEM.size(); ++i) {
+            QString edtName = listJ2BoundingFEM[i] ;
+            if(!mat[edtName].isNull())
+                edtsJ2BoundingFEM[i]->setText(QString::number(mat[edtName].toDouble(),'g',16));
+        }
+        QLineEdit *hPerm= J2BoundingWidget->findChild<QLineEdit*>("hPerm");
+        hPerm->setText(QString::number(hPermval,'g',16));
+        QLineEdit *vPerm= J2BoundingWidget->findChild<QLineEdit*>("vPerm");
+        vPerm->setText(QString::number(vPermval,'g',16));
+        QLineEdit *uBulk= J2BoundingWidget->findChild<QLineEdit*>("uBulk");
+        uBulk->setText(QString::number(uBulkval,'g',16));
+        QLineEdit *evoid= J2BoundingWidget->findChild<QLineEdit*>("evoid");
+        evoid->setText(QString::number(evoidval,'g',16));
     }
 
     // send the signal to update FEM cell
@@ -2565,6 +2908,46 @@ void TabManager::fillMatTab(QString thisMatType,const QModelIndex &index){
             }
         }
 
+        if (thisMatType == "J2Bounding")
+        {
+            QString densityFromTable = tableModel->data(tableModel->index(index.row(), DENSITY)).toString();
+
+            QLineEdit* DenEdt = J2BoundingWidget->findChild<QLineEdit*>("rho");
+            QString densityFromForm = DenEdt->text();
+
+            if(densityFromTable != densityFromForm)
+            {
+                //qDebug() << "Den here is different from the above table. ";
+                if (densityFromTable == "")
+                {
+                    tableModel->setData(tableModel->index(index.row(), DENSITY), densityFromForm);
+                    DenEdt->setText(densityFromForm);
+                }
+                else
+                {
+                    DenEdt->setText(densityFromTable);
+                }
+                onDataEdited();
+            }
+
+            QString esizeFromTable = tableModel->data(tableModel->index(index.row(), ESIZE)).toString();
+            QLineEdit* esizeEdt = J2BoundingWidget->findChild<QLineEdit*>("eSize");
+            QString esizeFromForm = esizeEdt->text();
+            if(esizeFromTable != esizeFromForm)
+            {
+                //qDebug() << "esize here is different from the above table. ";
+                if (esizeFromTable == "")
+                {
+                    tableModel->setData(tableModel->index(index.row(), ESIZE), esizeFromForm);
+                }
+                else
+                {
+                    esizeEdt->setText(esizeFromTable);
+                    onDataEdited();
+                }
+            }
+        }
+
         //onDataEdited();
 
     } else
@@ -2594,6 +2977,8 @@ void TabManager::onDataEdited()
         currentEdts = edtsPDMY02FEM;
     else if (thisMatType=="ManzariDafalias")
         currentEdts = edtsManzariDafaliasFEM;
+    else if (thisMatType=="J2Bounding")
+        currentEdts = edtsJ2BoundingFEM;
 
     // collect data in the form
     QString thisFEmString;
@@ -2641,6 +3026,11 @@ void TabManager::onDataEdited()
         QLineEdit* DenEdt = ManzariDafaliasWidget->findChild<QLineEdit*>("Den");
         tableModel->setData(tableModel->index(currentRow, DENSITY), DenEdt->text());
     }
+    if (thisMatType=="J2Bounding")
+    {
+        QLineEdit* DenEdt = J2BoundingWidget->findChild<QLineEdit*>("rho");
+        tableModel->setData(tableModel->index(currentRow, DENSITY), DenEdt->text());
+    }
 
 
 }
@@ -2662,17 +3052,19 @@ void TabManager::checkDefaultFEM(QString thisMatType,const QModelIndex &index)
     if (thisMatType == "Elastic")
         numPars = 11;
     else if (thisMatType == "PM4Sand")
-        numPars = 28;
-    else if (thisMatType == "PM4Silt")
-        numPars = 30;
-    else if (thisMatType == "PIMY")
-        numPars = 15;
-    else if (thisMatType == "PDMY")
-        numPars = 27;
-    else if (thisMatType == "PDMY02")
         numPars = 29;
+    else if (thisMatType == "PM4Silt")
+        numPars = 31;
+    else if (thisMatType == "PIMY")
+        numPars = 16;
+    else if (thisMatType == "PDMY")
+        numPars = 28;
+    else if (thisMatType == "PDMY02")
+        numPars = 30;
     else if (thisMatType == "ManzariDafalias")
-        numPars = 23;
+        numPars = 24;
+    else if (thisMatType == "J2Bounding")
+        numPars = 14;
     else
         numPars =0;
 
@@ -2729,7 +3121,7 @@ void TabManager::setDefaultFEM(QString thisMatType,const QModelIndex &index)
         QString density = tableModel->data(tableModel->index(index.row(), DENSITY)).toString();
         if (density=="")
             density = "2.0";
-        tableModel->setData(tableModel->index(currentRow, FEM), "2.0 0.47 500.0 0.45 "+ density +" 101.3 -1. 0.8 0.5 0.5 0.1 -1. -1. 250 -1. 33.0 0.3 2.0 -1. -1. 10. 1.5 0.01 -1. -1. "+"1.0e-7 1.0e-7 2.2e6");
+        tableModel->setData(tableModel->index(currentRow, FEM), "2.0 0.47 500.0 0.45 "+ density +" 101.3 -1. 0.8 0.5 0.5 0.1 -1. -1. 250 -1. 33.0 0.3 2.0 -1. -1. 10. 1.5 0.01 -1. -1. "+"1.0e-7 1.0e-7 2.2e6 0.46");
         //  "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24"
     }
     else if (thisMatType == "PM4Silt")
@@ -2737,7 +3129,7 @@ void TabManager::setDefaultFEM(QString thisMatType,const QModelIndex &index)
         QString density = tableModel->data(tableModel->index(index.row(), DENSITY)).toString();
         if (density=="")
             density = "2.0";
-        tableModel->setData(tableModel->index(currentRow, FEM), "2.0 0.47 100.0 1.0 500.0 0.45 "+ density +" 1.0 101.3 0.3 0.75 0.5 0.9 0.06 32.0 0.8 0.5 0.3 0.8 -1 -1 100.0 -1 3.0 4.0 0.01 2.0 "+"1.0e-7 1.0e-7 2.2e6");
+        tableModel->setData(tableModel->index(currentRow, FEM), "2.0 0.47 100.0 1.0 500.0 0.45 "+ density +" 1.0 101.3 0.3 0.75 0.5 0.9 0.06 32.0 0.8 0.5 0.3 0.8 -1 -1 100.0 -1 3.0 4.0 0.01 2.0 "+"1.0e-7 1.0e-7 2.2e6 0.46");
         //  "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24"
     }
     else if (thisMatType == "PIMY")
@@ -2746,7 +3138,7 @@ void TabManager::setDefaultFEM(QString thisMatType,const QModelIndex &index)
         if (density=="")
             density = "2.0";
         QString nd = "2";
-        tableModel->setData(tableModel->index(currentRow, FEM), "2.0 0.47 "+nd+" "+density+" 1.3e4 6.5e4 18 0.1 0 100. 0. 0 "+"1.0e-7 1.0e-7 2.2e6");
+        tableModel->setData(tableModel->index(currentRow, FEM), "2.0 0.47 "+nd+" "+density+" 1.3e4 6.5e4 18 0.1 0 100. 0. 0 "+"1.0e-7 1.0e-7 2.2e6 0.47");
     }
     else if (thisMatType == "PDMY")
     {
@@ -2754,7 +3146,7 @@ void TabManager::setDefaultFEM(QString thisMatType,const QModelIndex &index)
         if (density=="")
             density = "2.0";
         QString nd = "2";
-        tableModel->setData(tableModel->index(currentRow, FEM), "2.0 0.47 "+nd+" "+density+" 5.5e4 1.5e5 29 0.1 80 0.5 29 0.21 0. 0. 10 0.02 1. 0.6 0.9 0.02 0.7 101 0.3 0 "+"1.0e-7 1.0e-7 2.2e6");
+        tableModel->setData(tableModel->index(currentRow, FEM), "2.0 0.47 "+nd+" "+density+" 5.5e4 1.5e5 29 0.1 80 0.5 29 0.21 0. 0. 10 0.02 1. 0.6 0.9 0.02 0.7 101 0.3 0 "+"1.0e-7 1.0e-7 2.2e6 0.46");
         //  "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24"
     }
     else if (thisMatType == "PDMY02")
@@ -2763,20 +3155,28 @@ void TabManager::setDefaultFEM(QString thisMatType,const QModelIndex &index)
         if (density=="")
             density = "2.0";
         QString nd = "2";
-        tableModel->setData(tableModel->index(currentRow, FEM), "2.0 0.47 "+nd+" "+density+" 6e4 16e4 31 0.1 101 0.5 31 0.087 0.18 0.0 0.0 5. 3. 1. 0. 0.6 0.9 0.02 0.7 101 0.1 0 "+"1.0e-7 1.0e-7 2.2e6");
+        tableModel->setData(tableModel->index(currentRow, FEM), "2.0 0.47 "+nd+" "+density+" 6e4 16e4 31 0.1 101 0.5 31 0.087 0.18 0.0 0.0 5. 3. 1. 0. 0.6 0.9 0.02 0.7 101 0.1 0 "+"1.0e-7 1.0e-7 2.2e6 0.46");
     }
     else if (thisMatType == "ManzariDafalias")
     {
         QString density = tableModel->data(tableModel->index(index.row(), DENSITY)).toString();
         if (density=="")
             density = "2.0";
-        tableModel->setData(tableModel->index(currentRow, FEM), "2.0 0.47 125 0.05 0.8 1.25 0.712 0.019 0.934 0.7 100 0.01 7.05 0.968 1.1 0.704 3.5 4 600 "+ density +" 1.0e-7 1.0e-7 2.2e6");
+        tableModel->setData(tableModel->index(currentRow, FEM), "2.0 0.47 125 0.05 0.8 1.25 0.712 0.019 0.934 0.7 100 0.01 7.05 0.968 1.1 0.704 3.5 4 600 "+ density +" 1.0e-7 1.0e-7 2.2e6 0.46");
+    }
+    else if (thisMatType == "J2Bounding")
+    {
+        QString density = tableModel->data(tableModel->index(index.row(), DENSITY)).toString();
+        if (density=="")
+            density = "2.0";
+
+        tableModel->setData(tableModel->index(currentRow, FEM), "2.0 0.47 80000.0 1.7333e+05 150.0 "+ density +" 20000.0 1.5 0.0 0.5 1.0e-7 1.0e-7 2.2e6 0.46");
     }
 
 }
 
 void TabManager::onRunBtnClicked()
-{
+{/*
     if (tab->count()<4)
     {
         // init the dino view
@@ -2790,5 +3190,13 @@ void TabManager::onRunBtnClicked()
     }
     else
         tab->setCurrentIndex(3);
+        */
+}
+
+bool TabManager::updateConfigureTabFromOutside(QString slopex1val, QString slopex2val){
+     slopex1->setText(slopex1val);
+     slopex2->setText(slopex2val);
+
+     return 0;
 }
 

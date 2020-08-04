@@ -4,42 +4,42 @@ INCLUDEPATH += $$PWD/ \
                $$PWD/Include \
                $$PWD/FEM \
                $$PWD/SiteResponse \
-               $$PWD/UI
+               $$PWD/UI \
+               #/Users/simcenter/Codes/Research/OpenSees/OpenSees/OTHER/SuperLU_5.1.1/SRC
 
 unix {
 # You need to modify this section if your blas and lapack is in a different place
 INCLUDEPATH += /usr/local/opt/lapack/include \
-               /usr/local/include
+               /usr/local/include \
+
 
 # You need to modify this section if your blas and lapack is in a different place
 #LIBS += /usr/local/opt/lapack/lib/libblas.3.8.0.dylib \
 #        /usr/local/opt/lapack/lib/liblapack.3.8.0.dylib \
 #        /usr/local/opt/lapack/lib/liblapacke.3.8.0.dylib \
 #        -L/usr/local/lib -L/usr/lib  -lm -ldl -lgfortran
-LIBS += -llapack -lblas
+LIBS += -llapack
 }
 
 win32: {
 # You must append your lapack include path if it is not in a standard place.
 INCLUDEPATH += FEM \
-               SiteResponse
+            += SiteResponse
 
-LIBS += "C:/Adam/OpenSEES source/Win64/lib/release/lapack.lib"
-LIBS += "C:/Adam/OpenSEES source/Win64/lib/release/blas.lib"
-LIBS += "C:/Adam/OpenSEES source/Win64/lib/libifcoremt.lib"
-LIBS += "C:/Adam/OpenSEES source/Win64/lib/libirc.lib"
-LIBS += "C:/Adam/OpenSEES source/Win64/lib/ifconsol.lib"
-LIBS += "C:/Adam/OpenSEES source/Win64/lib/libifport.lib"
-LIBS += "C:/Adam/OpenSEES source/Win64/lib/libmmt.lib"
-LIBS += "C:/Adam/OpenSEES source/Win64/lib/svml_dispmt.lib"
+LIBS += "The path to the file lapack.lib"
+LIBS += "The path to the file blas.lib"
+LIBS += "The path to the file libifcoremt.lib"
+LIBS += "The path to the file libirc.lib"
+LIBS += "The path to the file ifconsol.lib"
+LIBS += "The path to the file libifport.lib"
+LIBS += "The path to the file libmmt.lib"
+LIBS += "The path to the file svml_dispmt.lib"
 # You must append your lapack include path if it is not in a standard place.
 LIBS += -L"$$_PRO_FILE_PWD_/lib"
 }
 
 
-SOURCES += $$PWD/main.cpp\
-        $$PWD/UI/MainWindow.cpp \
-        $$PWD/UI/RockOutcrop.cpp \
+SOURCES += $$PWD/UI/RockOutcrop.cpp \
     $$PWD/UI/BonzaTableView.cpp \
     $$PWD/UI/InsertWindow.cpp \
     $$PWD/UI/BonzaTableModel.cpp \
@@ -117,6 +117,9 @@ SOURCES += $$PWD/main.cpp\
     $$PWD/FEM/Information.cpp \
     $$PWD/FEM/Integrator.cpp \
     $$PWD/FEM/J2CyclicBoundingSurface.cpp \
+    $$PWD/FEM/ManzariDafalias.cpp \
+    $$PWD/FEM/ManzariDafalias3D.cpp \
+    $$PWD/FEM/ManzariDafaliasPlaneStrain.cpp \
     $$PWD/FEM/LegendreBeamIntegration.cpp \
     $$PWD/FEM/LinearCrdTransf3d.cpp \
     $$PWD/FEM/LinearSeries.cpp \
@@ -177,6 +180,7 @@ SOURCES += $$PWD/main.cpp\
     $$PWD/FEM/SolutionAlgorithm.cpp \
     $$PWD/FEM/SP_Constraint.cpp \
     $$PWD/FEM/SSPbrick.cpp \
+    $$PWD/FEM/SSPbrickUP.cpp \
     $$PWD/FEM/StandardStream.cpp \
     $$PWD/FEM/StaticAnalysis.cpp \
     $$PWD/FEM/StaticIntegrator.cpp \
@@ -203,6 +207,10 @@ SOURCES += $$PWD/main.cpp\
     #$$PWD/FEM/ErrorHandler.cpp \
     $$PWD/FEM/ElasticIsotropicPlaneStrain2D.cpp \
     #$$PWD/FEM/ElasticIsotropicPlaneStress2D.cpp \
+    $$PWD/FEM/MultiYieldSurface.cpp \
+    $$PWD/FEM/PressureDependMultiYield02.cpp \
+    $$PWD/FEM/PressureDependMultiYield.cpp \
+    $$PWD/FEM/PressureIndependMultiYield.cpp \
     $$PWD/SiteResponse/EffectiveFEModel.cpp \
     $$PWD/SiteResponse/Mesher.cpp \
     $$PWD/SiteResponse/soillayer.cpp \
@@ -211,11 +219,19 @@ SOURCES += $$PWD/main.cpp\
     #$$PWD/SiteResponse/FEModel3D.cpp
     $$PWD/UI/ProfileManager.cpp \
     $$PWD/UI/PostProcessor.cpp \
-    $$PWD/UI/SSSharkThread.cpp
+    $$PWD/UI/SSSharkThread.cpp \
+    $$PWD/FEM/T2Vector.cpp \
+    $$PWD/FEM/PlainHandler.cpp \
+    #$$PWD/FEM/SuperLU.cpp \
+    #$$PWD/FEM/SparseGenColLinSOE.cpp \
+    #$$PWD/FEM/Accelerator.cpp \
+    #$$PWD/FEM/AcceleratedNewton.cpp \
+    #$$PWD/FEM/KrylovAccelerator.cpp \
+    #$$PWD/FEM/KrylovNewton.cpp \
+    #$$PWD/FEM/SparseGenColLinSolver.cpp
 
 
-HEADERS  += $$PWD/UI/MainWindow.h \
-    $$PWD/UI/RockOutcrop.h \
+HEADERS  += $$PWD/UI/RockOutcrop.h \
     $$PWD/GlobalConstances.h \
     $$PWD/UI/BonzaTableView.h \
     $$PWD/UI/InsertWindow.h \
@@ -296,6 +312,9 @@ HEADERS  += $$PWD/UI/MainWindow.h \
     $$PWD/FEM/Information.h \
     $$PWD/FEM/Integrator.h \
     $$PWD/FEM/J2CyclicBoundingSurface.h \
+    $$PWD/FEM/ManzariDafalias.h \
+    $$PWD/FEM/ManzariDafalias3D.h \
+    $$PWD/FEM/ManzariDafaliasPlaneStrain.h \
     $$PWD/FEM/LegendreBeamIntegration.h \
     $$PWD/FEM/LinearCrdTransf3d.h \
     $$PWD/FEM/LinearSeries.h \
@@ -364,6 +383,7 @@ HEADERS  += $$PWD/UI/MainWindow.h \
     $$PWD/FEM/SP_Constraint.h \
     $$PWD/FEM/SP_ConstraintIter.h \
     $$PWD/FEM/SSPbrick.h \
+    $$PWD/FEM/SSPbrickUP.h \
     $$PWD/FEM/StandardStream.h \
     $$PWD/FEM/StaticAnalysis.h \
     $$PWD/FEM/StaticIntegrator.h \
@@ -395,6 +415,10 @@ HEADERS  += $$PWD/UI/MainWindow.h \
     #$$PWD/FEM/ElasticIsotropicPlaneStress2D.h \
     $$PWD/FEM/SSPquad.h \
     $$PWD/FEM/SSPquadUP.h \
+    $$PWD/FEM/MultiYieldSurface.h \
+    $$PWD/FEM/PressureDependMultiYield02.h \
+    $$PWD/FEM/PressureDependMultiYield.h \
+    $$PWD/FEM/PressureIndependMultiYield.h \
     $$PWD/SiteResponse/Mesher.h \
     $$PWD/SiteResponse/EffectiveFEModel.h \
     $$PWD/SiteResponse/soillayer.h \
@@ -402,7 +426,17 @@ HEADERS  += $$PWD/UI/MainWindow.h \
     $$PWD/SiteResponse/siteLayering.h \
     $$PWD/UI/ProfileManager.h \
     $$PWD/UI/PostProcessor.h \
-    $$PWD/UI/SSSharkThread.h
+    $$PWD/UI/SSSharkThread.h \
+    $$PWD/FEM/T2Vector.h \
+    $$PWD/FEM/PlainHandler.h \
+
+    #$$PWD/FEM/SuperLU.h \
+    #$$PWD/FEM/SparseGenColLinSOE.h \
+    #$$PWD/FEM/Accelerator.h \
+    #$$PWD/FEM/AcceleratedNewton.h \
+    #$$PWD/FEM/KrylovAccelerator.h \
+    #$$PWD/FEM/KrylovNewton.h \
+    #$$PWD/FEM/SparseGenColLinSolver.h
 
 
 FORMS    += $$PWD/UI/MainWindow.ui \
